@@ -6,6 +6,13 @@ import time
 from collections import defaultdict
 import re
 
+# Fonction de vérification personnalisée pour autoriser les administrateurs ou les utilisateurs ayant la permission de gérer les messages
+def admin_or_manage_messages():
+    async def predicate(interaction: discord.Interaction) -> bool:
+        # Vérifie si l'utilisateur est administrateur ou peut gérer les messages
+        return interaction.user.guild_permissions.administrator or interaction.user.guild_permissions.manage_messages
+    return app_commands.check(predicate)
+
 class GifLimit(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -110,49 +117,56 @@ class GifLimit(commands.Cog):
                     print(f"ERREUR - Problème lors de la suppression du message: {e}")
 
     @app_commands.command(name="enable_gif_limit", description="Active la limitation de GIF pour le salon actuel")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def enable_gif_limit(self, interaction: discord.Interaction):
         """Active la limitation de GIF pour le salon actuel."""
         self.update_channel_config(interaction.guild.id, interaction.channel_id, is_enabled=True)
         await interaction.response.send_message("La limitation de GIF a été activée pour ce salon.", ephemeral=True)
 
     @app_commands.command(name="disable_gif_limit", description="Désactive la limitation de GIF pour le salon actuel")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def disable_gif_limit(self, interaction: discord.Interaction):
         """Désactive la limitation de GIF pour le salon actuel."""
         self.update_channel_config(interaction.guild.id, interaction.channel_id, is_enabled=False)
         await interaction.response.send_message("La limitation de GIF a été désactivée pour ce salon.", ephemeral=True)
 
     @app_commands.command(name="enable_gif_limit_server", description="Active la limitation de GIF pour tous les salons du serveur")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def enable_gif_limit_server(self, interaction: discord.Interaction):
         """Active la limitation de GIF pour tous les salons du serveur."""
         self.update_server_config(interaction.guild.id, is_enabled=True)
         await interaction.response.send_message("La limitation de GIF a été activée pour tous les salons du serveur.", ephemeral=True)
 
     @app_commands.command(name="disable_gif_limit_server", description="Désactive la limitation de GIF pour tous les salons du serveur")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def disable_gif_limit_server(self, interaction: discord.Interaction):
         """Désactive la limitation de GIF pour tous les salons du serveur."""
         self.update_server_config(interaction.guild.id, is_enabled=False)
         await interaction.response.send_message("La limitation de GIF a été désactivée pour tous les salons du serveur.", ephemeral=True)
 
     @app_commands.command(name="set_gif_limit", description="Définit une nouvelle limite de GIF pour le salon actuel")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def set_gif_limit(self, interaction: discord.Interaction, limit: int):
         """Définit une nouvelle limite de GIF pour le salon actuel."""
         self.update_channel_config(interaction.guild.id, interaction.channel_id, gif_limit=limit)
         await interaction.response.send_message(f"La limite de GIF pour ce salon a été fixée à {limit}.", ephemeral=True)
 
     @app_commands.command(name="set_time_window", description="Définit une nouvelle période de temps pour le comptage des GIF")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def set_time_window(self, interaction: discord.Interaction, seconds: int):
         """Définit une nouvelle période de temps pour le comptage des GIF pour le salon actuel."""
         self.update_channel_config(interaction.guild.id, interaction.channel_id, time_window=seconds)
         await interaction.response.send_message(f"La période de vérification pour les GIF a été définie à {seconds} secondes pour ce salon.", ephemeral=True)
 
     @app_commands.command(name="show_gif_config", description="Affiche la configuration actuelle de GIF pour le salon actuel")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def show_gif_config(self, interaction: discord.Interaction):
         """Affiche la configuration actuelle de GIF pour le salon actuel."""
         gif_limit, time_window, is_enabled = self.get_channel_config(interaction.guild.id, interaction.channel_id)
