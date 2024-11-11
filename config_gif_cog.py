@@ -2,6 +2,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+# Fonction de vérification personnalisée pour autoriser les administrateurs ou les utilisateurs ayant la permission de gérer les messages
+def admin_or_manage_messages():
+    async def predicate(interaction: discord.Interaction) -> bool:
+        # Vérifie si l'utilisateur est administrateur ou peut gérer les messages
+        return interaction.user.guild_permissions.administrator or interaction.user.guild_permissions.manage_messages
+    return app_commands.check(predicate)
+
 class LimitGifModal(discord.ui.Modal, title="Définir Limite de GIF"):
     limit = discord.ui.TextInput(label="Nombre maximum de GIFs", style=discord.TextStyle.short, placeholder="Entrez un nombre", required=True)
 
@@ -139,7 +146,8 @@ class ConfigGif(commands.Cog):
         self.ban_gif_cog = bot.get_cog("BanGif")
 
     @app_commands.command(name="config_gif", description="Affiche les options de configuration pour la gestion des GIFs")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def config_gif(self, interaction: discord.Interaction):
         """Affiche le menu principal avec des options de gestion des GIFs."""
         
