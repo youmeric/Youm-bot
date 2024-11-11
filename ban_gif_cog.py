@@ -3,6 +3,13 @@ from discord import app_commands
 from discord.ext import commands
 import sqlite3
 
+# Fonction de vérification personnalisée pour autoriser les administrateurs ou les utilisateurs ayant la permission de gérer les messages
+def admin_or_manage_messages():
+    async def predicate(interaction: discord.Interaction) -> bool:
+        # Vérifie si l'utilisateur est administrateur ou peut gérer les messages
+        return interaction.user.guild_permissions.administrator or interaction.user.guild_permissions.manage_messages
+    return app_commands.check(predicate)
+
 class BanGif(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -57,21 +64,24 @@ class BanGif(commands.Cog):
                 break
 
     @app_commands.command(name="ban_gif", description="Interdit un GIF spécifique sur le serveur")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def ban_gif(self, interaction: discord.Interaction, gif_url: str):
         """Interdit un GIF spécifique sur le serveur."""
         self.add_banned_gif(interaction.guild.id, gif_url)
         await interaction.response.send_message(f"Le GIF {gif_url} a été interdit sur ce serveur.", ephemeral=True)
 
     @app_commands.command(name="unban_gif", description="Retire l'interdiction d'un GIF spécifique sur le serveur")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def unban_gif(self, interaction: discord.Interaction, gif_url: str):
         """Retire l'interdiction d'un GIF spécifique sur le serveur."""
         self.remove_banned_gif(interaction.guild.id, gif_url)
         await interaction.response.send_message(f"Le GIF {gif_url} n'est plus interdit sur ce serveur.", ephemeral=True)
 
     @app_commands.command(name="show_banned_gifs", description="Affiche la liste des GIF interdits sur ce serveur")
-    @app_commands.checks.has_permissions(administrator=True)
+    #@app_commands.checks.has_permissions(administrator=True)
+    @admin_or_manage_messages()
     async def show_banned_gifs(self, interaction: discord.Interaction):
         """Affiche la liste des GIF interdits sur le serveur."""
         banned_gifs = self.get_banned_gifs(interaction.guild.id)
