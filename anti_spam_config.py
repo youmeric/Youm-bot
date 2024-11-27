@@ -8,6 +8,70 @@ def admin_only():
         return interaction.user.guild_permissions.administrator
     return app_commands.check(predicate)
 
+# Modal pour définir la limite de messages similaires
+class SpamLimitModal(discord.ui.Modal, title="Définir Limite de Messages Similaires"):
+    limit = discord.ui.TextInput(
+        label="Nombre maximum de messages similaires",
+        style=discord.TextStyle.short,
+        placeholder="Entrez un nombre entier",
+        required=True
+    )
+
+    def __init__(self, cog):
+        super().__init__()
+        self.cog = cog
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            limit = int(self.limit.value)
+            self.cog.update_server_config(interaction.guild_id, spam_limit=limit)
+            await interaction.response.send_message(f"Limite de messages similaires définie : {limit}.", ephemeral=True)
+        except ValueError:
+            await interaction.response.send_message("Erreur : Veuillez entrer un nombre entier.", ephemeral=True)
+
+# Modal pour définir la période de temps
+class SpamTimeWindowModal(discord.ui.Modal, title="Définir Période de Temps"):
+    time_window = discord.ui.TextInput(
+        label="Durée en secondes",
+        style=discord.TextStyle.short,
+        placeholder="Entrez un nombre entier",
+        required=True
+    )
+
+    def __init__(self, cog):
+        super().__init__()
+        self.cog = cog
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            time_window = int(self.time_window.value)
+            self.cog.update_server_config(interaction.guild_id, time_window=time_window)
+            await interaction.response.send_message(f"Période de temps définie : {time_window} secondes.", ephemeral=True)
+        except ValueError:
+            await interaction.response.send_message("Erreur : Veuillez entrer un nombre entier.", ephemeral=True)
+
+# Modal pour définir le nombre maximum de salons avant bannissement
+class MaxChannelsBeforeBanModal(discord.ui.Modal, title="Définir Nombre Maximum de Salons"):
+    max_channels = discord.ui.TextInput(
+        label="Nombre maximum de salons",
+        style=discord.TextStyle.short,
+        placeholder="Entrez un nombre entier",
+        required=True
+    )
+
+    def __init__(self, cog):
+        super().__init__()
+        self.cog = cog
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            max_channels = int(self.max_channels.value)
+            self.cog.update_server_config(interaction.guild_id, max_channels_before_ban=max_channels)
+            await interaction.response.send_message(f"Nombre maximum de salons défini : {max_channels}.", ephemeral=True)
+        except ValueError:
+            await interaction.response.send_message("Erreur : Veuillez entrer un nombre entier.", ephemeral=True)
+
+# Modal pour définir le rôle staff
 class StaffRoleModal(discord.ui.Modal, title="Définir le Rôle Staff"):
     staff_role_id = discord.ui.TextInput(
         label="ID du rôle Staff",
@@ -31,8 +95,9 @@ class StaffRoleModal(discord.ui.Modal, title="Définir le Rôle Staff"):
             self.cog.update_server_config(interaction.guild_id, staff_role_id=role_id)
             await interaction.response.send_message(f"Le rôle Staff a été défini sur {role.mention}.", ephemeral=True)
         except ValueError:
-            await interaction.response.send_message("Valeur invalide. Veuillez entrer un ID numérique.", ephemeral=True)
+            await interaction.response.send_message("Erreur : Veuillez entrer un ID numérique.", ephemeral=True)
 
+# Modal pour définir le salon d'alerte
 class AlertChannelModal(discord.ui.Modal, title="Définir le Salon d'Alerte"):
     alert_channel_id = discord.ui.TextInput(
         label="ID du salon d'alerte",
@@ -56,8 +121,9 @@ class AlertChannelModal(discord.ui.Modal, title="Définir le Salon d'Alerte"):
             self.cog.update_server_config(interaction.guild_id, alert_channel_id=channel_id)
             await interaction.response.send_message(f"Le salon d'alerte a été défini sur {channel.mention}.", ephemeral=True)
         except ValueError:
-            await interaction.response.send_message("Valeur invalide. Veuillez entrer un ID numérique.", ephemeral=True)
+            await interaction.response.send_message("Erreur : Veuillez entrer un ID numérique.", ephemeral=True)
 
+# Vue principale du panneau de configuration
 class AntiSpamMainMenuView(discord.ui.View):
     def __init__(self, cog):
         super().__init__(timeout=None)
@@ -86,12 +152,12 @@ class AntiSpamMainMenuView(discord.ui.View):
     @discord.ui.button(label="Activer l'Anti-Spam", style=discord.ButtonStyle.success, custom_id="enable_anti_spam")
     async def enable_anti_spam(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.cog.update_server_config(interaction.guild_id, is_enabled=True)
-        await interaction.response.send_message("L'anti-spam a été activé pour ce serveur.", ephemeral=True)
+        await interaction.response.send_message("Anti-spam activé pour ce serveur.", ephemeral=True)
 
     @discord.ui.button(label="Désactiver l'Anti-Spam", style=discord.ButtonStyle.danger, custom_id="disable_anti_spam")
     async def disable_anti_spam(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.cog.update_server_config(interaction.guild_id, is_enabled=False)
-        await interaction.response.send_message("L'anti-spam a été désactivé pour ce serveur.", ephemeral=True)
+        await interaction.response.send_message("Anti-spam désactivé pour ce serveur.", ephemeral=True)
 
     @discord.ui.button(label="Afficher Configuration", style=discord.ButtonStyle.secondary, custom_id="show_config")
     async def show_config(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -110,6 +176,7 @@ class AntiSpamMainMenuView(discord.ui.View):
             ephemeral=True
         )
 
+# Commande slash pour afficher le panneau de configuration
 class AntiSpamConfig(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
