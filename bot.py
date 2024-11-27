@@ -59,6 +59,18 @@ async def load_extensions():
     except Exception as e:
         print(f"Erreur de chargement config_gif_cog: {e}")
 
+    try:
+        await bot.load_extension("anti_spam_cog")
+        print("Extension anti_spam_cog chargée.")
+    except Exception as e:
+        print(f"Erreur de chargement anti_spam_cog: {e}")
+
+    try:
+        await bot.load_extension("anti_spam_config_cog")
+        print("Extension anti_spam_config_cog chargée.")
+    except Exception as e:
+        print(f"Erreur lors du chargement de l'extension anti_spam_config_cog : {e}")
+
 async def main():
     await load_extensions()  # Charger toutes les extensions
     #keep_alive()  # Démarrer le service keep_alive si nécessaire
